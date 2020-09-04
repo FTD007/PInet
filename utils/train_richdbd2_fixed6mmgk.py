@@ -8,9 +8,6 @@ import torch.nn.parallel
 import torch.optim as optim
 import torch.utils.data
 from pointnet.dataset import ShapeNetDataset3aug
-# from pointnet.model import PointNetDenseCls7, feature_transform_regularizer
-# from 16
-# from pointnet.dataset import ShapeNetDataset5
 from pointnet.model import PointNetDenseCls12, feature_transform_regularizer
 
 import torch.nn.functional as F
@@ -38,27 +35,17 @@ def pairwise_distances(x, y=None):
         y_norm = x_norm.view(1, -1)
 
     dist = x_norm + y_norm - 2.0 * torch.mm(x, y_t)
-    # Ensure diagonal is zero if x=y
-    # if y is None:
-    #     dist = dist - torch.diag(dist.diag)
     return torch.clamp(dist, 0.0, np.inf)
 
 def gk(x):
     cen=torch.nn.Parameter(torch.tensor([0.05,0.15,0.25,0.35,0.45,0.55,0.65,0.75,0.85,0.95]).float(), requires_grad=False).cuda()
-    # print(x.device)
-    # print(cen.device)
     xmat=x.float().cuda()-cen
     sigma=200
-    # sigma=50
-    # sigma = 40
-    # y = torch.sum(1 / torch.sqrt(torch.tensor(2 * math.pi)) * torch.exp((-1 / 2 * (xmat * 20)** 2).float()),dim=0)
-    # y = torch.sum(15.0/16*(0.05-(xmat)**2)**2, dim=0)
     y = torch.sum(torch.sigmoid(sigma * (xmat + 0.1 / 2)) - torch.sigmoid(sigma * (xmat - 0.1 / 2)),dim=0)
     y = y / torch.sum(y)
     return y
+
 parser = argparse.ArgumentParser()
-# parser.add_argument(
-#     '--batchSize', type=int, default=32, help='input batch size')
 parser.add_argument(
     '--batchSize', type=int, default=16, help='input batch size')
 parser.add_argument(
@@ -95,6 +82,7 @@ print("Random Seed: ", opt.manualSeed)
 random.seed(opt.manualSeed)
 torch.manual_seed(opt.manualSeed)
 
+# data loading
 dataset_r = ShapeNetDataset3aug(
     root=opt.dataset,
     npoints=3000,
@@ -169,8 +157,7 @@ except OSError:
     pass
 
 blue = lambda x: '\033[94m' + x + '\033[0m'
-# print(opt.feature_transform)
-# classifier = PointNetDenseCls7(k=num_classes, feature_transform=opt.feature_transform,pdrop=1.0*opt.drop/10.0)
+# model
 classifier = PointNetDenseCls12(k=num_classes, feature_transform=opt.feature_transform,pdrop=1.0*opt.drop/10.0,id=opt.indim)
 
 if opt.model != '':
@@ -180,7 +167,6 @@ optimizer = optim.Adam(classifier.parameters(), lr=0.001, betas=(0.9, 0.999))
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size=20, gamma=0.5)
 classifier.cuda()
 
-# loss=BCEloss
 
 num_batch = len(dataset_r) / opt.batchSize
 
@@ -196,14 +182,7 @@ for epoch in range(opt.nepoch):
 
         if targetr.sum() == 0 or targetl.sum() == 0:
             continue
-        # print(pointsr)
-        # print(pointsr.size())
-        # print(targetr)
-        # print(pointsl.size())
-        # pr,tr=data
-        # pl,tl=dataloader_l[i]
-        # memlim=110000
-        # memlim=60000
+        # subsample
         memlim=opt.npoints
         if pointsl.size()[1]+pointsr.size()[1]>memlim:
             lr=pointsl.size()[1]*memlim/(pointsl.size()[1]+pointsr.size()[1])
@@ -219,37 +198,28 @@ for epoch in range(opt.nepoch):
         pointsl = pointsl.transpose(2, 1)
         pointsr, targetr = pointsr.cuda(), targetr.cuda()
         pointsl, targetl = pointsl.cuda(), targetl.cuda()
-        # optimizer.zero_grad()
 
-        # classifier = classifier.train()
         classifier = classifier.eval()
         for m in classifier.modules():
             if m.__class__.__name__.startswith('Dropout'):
                 m.train()
 
         pred, trans_feat1,trans_feat2 = classifier(pointsr,pointsl)
-        # pred = pred.view(-1, num_classes)
         pred = pred.view(-1, 1)
-        # print(pred.size())
         target=torch.cat((targetr,targetl),1)
         target = target.view(-1, 1) - 1
-        # optimizer.zero_grad()
         loss = 1.0/opt.bs2*F.binary_cross_entropy_with_logits(pred, target.float(),pos_weight=torch.FloatTensor([(target.size()[0]-float(target.cpu().sum()))*1.0/float(target.cpu().sum())]).cuda())
+        # manual batch loss aggregate
         if opt.feature_transform:
             loss += feature_transform_regularizer(trans_feat1) * 0.001/opt.bs2
             loss += feature_transform_regularizer(trans_feat2) * 0.001 / opt.bs2
-        # print(targetr.size())
         if epoch>=opt.start:
+            # compute hist loss
             predr=pred[0:targetr.size()[1]].view(-1)
             predl=pred[targetr.size()[1]:].view(-1)
-            # print(predr.size())
-            # print(predl.size())
             br=(torch.gt(torch.sigmoid(predr.data),0.5)==1).nonzero()
             bl = (torch.gt(torch.sigmoid(predl.data), 0.5) == 1).nonzero()
-            # print(br.size())
-            # print(bl.size())
             if br.size()[0]!=0 and bl.size()[0]!=0:
-                # print(pointsr.size())
                 if br.size()[0] > 5000:
 
                     brs = np.random.choice(br.size()[0], 5000, replace=False)
@@ -260,22 +230,15 @@ for epoch in range(opt.nepoch):
                 if bl.size()[0] > 5000:
 
                     bls = np.random.choice(bl.size()[0], 5000, replace=False)
-                    # pr=pointsr[0,0:3,br[bs]].view(-1,3)
                     pl=torch.transpose(pointsl[0,0:3,bl[bls]].view(3,-1),0,1)
                 else:
-                    # pl = pointsl[0, 0:3, bl].view(-1, 3)
                     pl = torch.transpose(pointsl[0, 0:3, bl].view(3, -1), 0, 1)
-                # print(pr.size())
-                # print(pl.size())
                 dr=pairwise_distances(pr)
                 dl=pairwise_distances(pl)
-                # print(dr.size())
-                # print(dl.size())
                 diam=torch.max(torch.tensor([torch.max(dr),torch.max(dl)]))
                 dr=dr/diam
                 dl = dl / diam
 
-                # loss+=opt.fac*0.01*(1-1*F.cosine_similarity(torch.tensor([torch.mean(dr).item(),torch.std(dr).item(),torch.max(dr).item()]).view(1,-1),torch.tensor([torch.mean(dl).item(),torch.std(dl).item(),torch.max(dl).item()]).view(1,-1))[0])
                 if opt.lloss==1:
                     loss+=opt.fac*F.l1_loss(gk(dr.view(-1,1)),gk(dl.view(-1,1)))
                 else:
@@ -287,27 +250,18 @@ for epoch in range(opt.nepoch):
         if (i + 1) % opt.bs2 == 0:
             optimizer.step()
             optimizer.zero_grad()
-            # totalloss=0
             show_flag = 1
 
         if i == len(dataset_l) - 1:
             optimizer.step()
             optimizer.zero_grad()
-            # totalloss = 0
             show_flag = 1
 
         if show_flag:
-            # pred_choice = pred.data.max(1)[1]
             pred_choice = torch.gt(torch.sigmoid(pred.data),0.5).long()
-            # print(pred_choice)
-            # print(target.data)
             correct0 = pred_choice.eq(target.data)
             correct0 = pred_choice.eq(target.data).cpu().sum()
             correct1 = (pred_choice.eq(target.data).long()*target.data).cpu().sum()
-            # print(target.data.size())
-            # print('[%d: %d/%d] train loss: %f accuracy: %f' % (epoch, i, num_batch, loss.item(), correct0.item()/float(opt.batchSize * opt.npoints*2)))
-            # print('[%d: %d/%d] train loss: %f class 1 accuracy: %f' % (
-            # epoch, i, num_batch, loss.item(), correct1.item() / float(target.data.sum().item())))
             print('[%d: %d/%d] train loss: %f accuracy: %f' % (
             epoch, i, num_batch, totalloss.item(), correct0.item() / float(opt.batchSize * target.size()[0])))
             print('[%d: %d/%d] train loss: %f class 1 accuracy: %f' % (
@@ -324,11 +278,9 @@ for epoch in range(opt.nepoch):
             for j, (datar, datal) in enumerate(zip(testdataloader_r, testdataloader_l), 0):
                 pointsr, targetr = datar
                 pointsl, targetl = datal
-                # print(pointsr.size())
-                # memlim = 110000
+
                 memlim = 90000
                 if pointsl.size()[1] + pointsr.size()[1] > memlim:
-                    # print(pointsl.size()[1] + pointsr.size()[1])
                     lr = pointsl.size()[1] * memlim / (pointsl.size()[1] + pointsr.size()[1])
                     rr = pointsr.size()[1] * memlim / (pointsl.size()[1] + pointsr.size()[1])
                     ls = np.random.choice(pointsl.size()[1], lr, replace=False)
@@ -340,9 +292,7 @@ for epoch in range(opt.nepoch):
                     targetl = targetl[:, ls]
                 pointsr = pointsr.transpose(2, 1)
                 pointsl = pointsl.transpose(2, 1)
-                # print(pointsr)
-                # print(np.amax(pointsr[0]))
-                # print(np.amin(pointsr[0]))
+
                 pointsr, targetr = pointsr.cuda(), targetr.cuda()
                 pointsl, targetl = pointsl.cuda(), targetl.cuda()
                 classifier = classifier.eval()
@@ -353,17 +303,12 @@ for epoch in range(opt.nepoch):
                 pred = pred.view(-1, 1)
                 target = torch.cat((targetr, targetl), 1)
                 target = target.view(-1, 1) - 1
-                # loss = F.binary_cross_entropy_with_logits(pred, target.float(), pos_weight=torch.FloatTensor(
-                #     [(target.size()[0] - float(target.cpu().sum())) * 1.0 / float(target.cpu().sum())]).cuda())
-                # loss = F.binary_cross_entropy_with_logits(pred, target.float(), pos_weight=torch.FloatTensor([(target.size()[0]-float(target.cpu().sum()))*1.0/float(target.cpu().sum())]).cuda())
 
                 pred_choice = torch.gt(torch.sigmoid(pred.data), 0.5).long()
 
                 correct0 = pred_choice.eq(target.data).cpu().sum()
                 correct1 = (pred_choice.eq(target.data).long() * target.data).cpu().sum()
-                # epoch = 0
-                # num_batch = 0
-                # i = 0
+
                 blue = lambda x: '\033[94m' + x + '\033[0m'
 
                 if j==0:
@@ -373,23 +318,15 @@ for epoch in range(opt.nepoch):
                     print('[%d: %d/%d] %s loss: %f class 1 accuracy: %f' % (
                         epoch, i, num_batch, blue('test'), loss.item(),
                         correct1.item() / float(target.data.sum().item())))
-                # print('[%d: %d/%d] %s loss: %f accuracy: %f' % (epoch, j, num_batch, blue('test'), loss.item(),
-                #                                                 correct0.item() / float(
-                #                                                     opt.batchSize * target.size()[0])))
-                all.append(correct0.item() / float(opt.batchSize * target.size()[0]))
-                # print('[%d: %d/%d] %s loss: %f class 1 accuracy: %f' % (
-                # epoch, j, num_batch, blue('test'), loss.item(), correct1.item() / float(target.data.sum().item())))
 
-                # print('[%d: %d/%d] %s loss: %f presicion: %f' % (
-                # epoch, j, num_batch, blue('test'), loss.item(), precision_score(target.data.cpu(), pred_choice.cpu())))
+                all.append(correct0.item() / float(opt.batchSize * target.size()[0]))
+
                 allp.append(precision_score(target.data.cpu(), pred_choice.cpu()))
-                # print('[%d: %d/%d] %s loss: %f recall: %f' % (
-                # epoch, j, num_batch, blue('test'), loss.item(), recall_score(target.data.cpu(), pred_choice.cpu())))
+
                 allr.append(recall_score(target.data.cpu(), pred_choice.cpu()))
                 fpr, tpr, thresholds = roc_curve(target.data.cpu(),
                                                  torch.sigmoid(pred.data).cpu(), pos_label=1)
-                # print(
-                #     '[%d: %d/%d] %s loss: %f auc: %f' % (epoch, j, num_batch, blue('test'), loss.item(), auc(fpr, tpr)))
+
                 allauc.append(auc(fpr, tpr))
             print(sum(all) * 1.0 / len(all))
             print(sum(allp) * 1.0 / len(all))

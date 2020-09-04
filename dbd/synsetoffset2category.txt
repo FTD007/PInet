@@ -1,0 +1,3 @@
+protein	all
+ligand	lf
+recept	rf
