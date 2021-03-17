@@ -1,0 +1,3 @@
+protein	2
+ligand	2
+recept	2
