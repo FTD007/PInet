@@ -1,7 +1,7 @@
 # PInet
 ## Setup
 run 
-> python setup.py
+> pip install -e .
 
 ## Train
 run
