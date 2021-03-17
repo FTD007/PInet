@@ -5,9 +5,9 @@ run
 
 ## Train
 run
-> python uitls/train_richdbd2_fixed6mmgk.py -dataset [your dataset]
-for example here
-> python uitls/train_richdbd2_fixed6mmgk.py -dataset dbd
+> python utils/train_richdbd2_fixed6mmgk.py -dataset [your dataset] \
+for example here \
+> python utils/train_richdbd2_fixed6mmgk.py -dataset dbd
 
 
 ## Load pretrained model
