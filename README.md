@@ -17,7 +17,7 @@ In python with torch imported
 ## Sample dataset folder
 Dbd 5 
 dataset folder should follow dbd folder structure
-input data should be a n-by-5 matrix, with columns' order [x,y,z,electrostatic,hydrophobicity]
+input data should be a n-by-5 matrix, with columns' order [x,y,z,electrostatic,hydrophobicity]   
 dbd data are now avalable at https://www.dropbox.com/sh/qqi9op061mfxbmo/AADibYuDdMF4n2bDS3uqiEVha?dl=0
   
 ## Preprocess Helper
