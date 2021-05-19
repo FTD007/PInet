@@ -15,10 +15,11 @@ In python with torch imported
 > classifier.load_state_dict(torch.load('model/seg_model_protein_15.pth'))
 
 ## Sample dataset folder
-dbd  
+Dbd 5 
 dataset folder should follow dbd folder structure
 input data should be a n-by-5 matrix, with columns' order [x,y,z,electrostatic,hydrophobicity]
-
+dbd data are now avalable at https://www.dropbox.com/sh/qqi9op061mfxbmo/AADibYuDdMF4n2bDS3uqiEVha?dl=0
+  
 ## Preprocess Helper
 utils/pdb2wrlpymol2_pub.py  
 change pdb files folder in the script and for a given complex ABCD.pdb, split the ligand and receptor as ABCD_l.pdb and ABCD_r.pdb.  
