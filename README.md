@@ -12,6 +12,8 @@ Generate label for trainning
 
 > python PreProcessLifeSavor.py 2I25-l.pdb 2I25-r.pdb train  
 
+Replace 2I25-l.pdb and 2I25-r.pdb by your input pair of pdbs.
+
 ## Setup
 run 
 > pip install -e .
