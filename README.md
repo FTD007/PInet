@@ -1,4 +1,12 @@
 # PInet
+## Simple Preprocess  
+run
+> cd utils
+Just for testing  
+> python PreProcessLifeSavor.py 2I25-l.pdb 2I25-r.pdb
+Generate label for trainning  
+> python PreProcessLifeSavor.py 2I25-l.pdb 2I25-r.pdb train
+
 ## Setup
 run 
 > pip install -e .
