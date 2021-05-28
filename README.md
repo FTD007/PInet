@@ -18,7 +18,10 @@ run
 
 ## Train
 run
+
 > python utils/train_richdbd2_fixed6mmgk.py -dataset [your dataset] \
+
+
 for example here \
 > python utils/train_richdbd2_fixed6mmgk.py -dataset dbd
 
