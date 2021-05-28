@@ -4,6 +4,7 @@ run
 
 > cd utils  
 
+Modify the path to pdb2pqr and apbs binary files in PreProcessLifeSavor.py  
 Just for testing  
 
 > python PreProcessLifeSavor.py 2I25-l.pdb 2I25-r.pdb  
