@@ -71,5 +71,5 @@ pred, _, _ = classifier(pointsr,pointsl)
 
 pred = pred.view(-1, 1)
 
-np.savetxt('prob_r_l.seg',torch.sigmoid(pred).view(1, -1).data.cpu())
+np.savetxt(filel[0:4]+'_prob_r_l.seg',torch.sigmoid(pred).view(1, -1).data.cpu())
     
