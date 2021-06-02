@@ -15,6 +15,11 @@ Generate label for trainning
 
 Replace 2I25-l.pdb and 2I25-r.pdb by your input pair of pdbs. File name format should be XXXX*.pdb where XXXX is the id.  
 
+## Simple Prediction
+run  
+
+> python SimplePredictor.py 2I25-l.pts 2I25-r.pts
+
 ## Setup
 run 
 > pip install -e .
