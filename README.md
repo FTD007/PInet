@@ -20,6 +20,11 @@ run
 
 > python SimplePredictor.py 2I25-l.pts 2I25-r.pts
 
+## Simple Residue Prediction Aggregation
+run  
+
+> python PredictionPoint2Residue.py 2I25
+
 ## Setup
 run 
 > pip install -e .
