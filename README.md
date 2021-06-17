@@ -53,7 +53,7 @@ dbd data are now avalable at https://www.dropbox.com/sh/qqi9op061mfxbmo/AADibYuD
 EpiPred 
 dataset folder should follow dbd folder structure
 input data should be a n-by-5 matrix, with columns' order [x,y,z,electrostatic,hydrophobicity]   
-EpiPred data are now avalable at https://www.dropbox.com/s/ldz7igqrq65bs1u/synsetoffset2category.txt?dl=0
+EpiPred data are now avalable at https://www.dropbox.com/sh/wnrn65y4vfs2m84/AABSFL8IeWh_U7gQO2__ZFEHa?dl=0
 
   
 ## Preprocess Helper
