@@ -164,8 +164,8 @@ avr = findvalue(rcoord, gr, orr, dr, vr)
 
 
 
-lpred=np.sum(hlabell[indl]*distl,1)/np.sum(distl,1)
-rpred = np.sum(hlabelr[indr] * distr, 1) / np.sum(distr, 1)
+lpred=np.sum(hlabell[indl]*distl,1)/np.sum(distl,1)/10.0
+rpred = np.sum(hlabelr[indr] * distr, 1) / np.sum(distr, 1)/10.0
 
 
 np.savetxt(pdbfile_l[0:4]+'-l.pts',np.concatenate((lcoord,np.expand_dims(avl,1),np.expand_dims(lpred,1)),axis=1))
