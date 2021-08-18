@@ -1,5 +1,5 @@
 # PInet
-## Simple Preprocess  
+<!---## Simple Preprocess  
 run  
 
 > cd utils  
@@ -24,7 +24,7 @@ run
 run  
 
 > python PredictionPoint2Residue.py 2I25
-
+--->
 ## Setup
 run 
 > pip install -e .
