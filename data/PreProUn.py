@@ -16,7 +16,7 @@ from sklearn.neighbors import NearestNeighbors
 # pdbfile_l=sys.argv[1]
 # pdbfile_r=sys.argv[2]
 
-def prepro(pdb,not_skip_pymol=1,train_flag=0,needapbs=1,pf='',wf='',af='./',ptsf='pts2/',segf='seg/'):
+def prepro(pdb,not_skip_pymol=1,train_flag=0,needapbs=1,pf='',wf='',af='./',ptsf='',rm=1):
     pdbfile_l=pdb
         
     if not_skip_pymol:
@@ -127,8 +127,5 @@ def prepro(pdb,not_skip_pymol=1,train_flag=0,needapbs=1,pf='',wf='',af='./',ptsf
     np.savetxt(ptsf+pdbfile_l[0:4]+'-l.pts',
                np.hstack((sdatal[:,0:3],np.expand_dims(sdatal[:,6],1),
                           np.expand_dims(sdatal[:,10],1),sdatal[:,3:6],sdatal[:,7:10],sdatal[:,11:])), fmt='%1.6e')
-    np.savetxt(ptsf+pdbfile_r[0:4]+'-r.pts',
-                   np.hstack((sdatar[:,0:3],np.expand_dims(sdatar[:,6],1),
-                              np.expand_dims(sdatar[:,10],1),sdatar[:,3:6],sdatar[:,7:10],sdatar[:,11:])), fmt='%1.6e')
-    
-#     subprocess.check_output('rm '+pdbfile_r[0:4]+'*', shell=True)
+    if rm:
+        subprocess.check_output('rm '+pdbfile_l[0:4]+'*', shell=True)
