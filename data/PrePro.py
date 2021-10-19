@@ -172,7 +172,6 @@ def prepro(pdb,pdbpair,not_skip_pymol=0,train_flag=0,needapbs=0,pf='01-benchmark
 
     # add apbs feature
 
-    # newdick, labeldick, ab, ag = getcontactbyabag('/path/to/complex/pdb/files', ab=pdbdic[key][0], ag=pdbdic[key][1])
     centroid_l, labelsl = getlabels(pf+pdbfile_l)
     centroid_r, labelsr = getlabels(pf+pdbfile_r)
 
